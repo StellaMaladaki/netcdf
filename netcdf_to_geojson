@@ -1,0 +1,30 @@
+import netCDF4 as nc
+import geopandas as gpd
+from shapely.geometry import Point
+
+# Open the NetCDF file REPLACE NETCDF_FILE WITH YOUR FILE 
+netcdf_file = nc.Dataset('NETCDF_FILE.nc', 'r')
+
+# Extract the data you need from the NetCDF file, and create GeoJSON-like geometries
+lats = netcdf_file.variables['lat'][:]
+lons = netcdf_file.variables['lon'][:]
+DATA = netcdf_file.variables['DATA'][:]
+
+# Create a list of GeoJSON-like features
+features = []
+for lat, lon, DATA in zip(lats, lons, DATA):
+    point = Point(lon, lat)
+    feature = {
+        'type': 'Feature',
+        'geometry': point.__geo_interface__,
+        'properties': {
+            'DATA': DATA
+        }
+    }
+    features.append(feature)
+
+# Create a GeoDataFrame from the features
+gdf = gpd.GeoDataFrame.from_features(features)
+
+# Export to GeoJSON
+gdf.to_file('outpout.geojson', driver='GeoJSON')
